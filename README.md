@@ -1,86 +1,142 @@
-This project implements Logistic Regression for binary classification using two optimization approaches:
+# Logistic Regression Model
 
-### 1. Gradient Descent
-
-The model parameters are optimized iteratively using Batch Gradient Descent.
-At each iteration, the algorithm computes gradients using the entire dataset and updates the weights to minimize the Binary Cross-Entropy (Log Loss).
-
-Gradient Descent is useful when:
-
-The dataset size is small to medium
-
-Stable and smooth convergence is preferred
-
-Full-batch updates are computationally feasible
----
-
-### 2. Stochastic Gradient Descent (SGD)
-
-The model also implements Stochastic Gradient Descent (SGD), where parameters are updated using one training sample (or a small batch) at each iteration instead of the entire dataset.
-
-Unlike standard Gradient Descent, SGD performs more frequent updates, which can significantly speed up learning in practice.
-
-Stochastic Gradient Descent is useful when:
-
-The dataset is very large
-
-Faster updates are required
-
-Memory usage must be reduced
-
-Online learning (real-time updates) is needed
-
-Although SGD introduces more noise in the optimization process, it often converges faster and may generalize better in real-world scenarios.
+Triển khai thuật toán **Logistic Regression** cho bài toán phân loại nhị phân (binary classification) với hai phương pháp tối ưu hóa: **Gradient Descent** và **Stochastic Gradient Descent (SGD)** — xây dựng từ đầu bằng Python thuần, không dùng scikit-learn.
 
 ---
-The dataset used in this project is obtained from an external source.
-You can replace the dataset to generate new weights and make predictions by using a dataset in CSV format.
-Rename the dataset to data.csv and place it in the data directory.
-Then, update the feature_names.txt file to match the feature names in the dataset.
-Note: the last feature name must be the output feature, which is the value you want to predict.
 
-Additionally, note that there is an encoding.py file in the encoding directory.
-If your dataset contains string values (for example, a car dataset), you need to encode them into numerical values such as 0, 1, 2, 3, ..., depending on how many unique categories the data contains.
+## Thuật toán tối ưu
 
-🔗 Dataset link:  
-tieuduong : i don't know :))
+### Gradient Descent (Batch)
+Tại mỗi vòng lặp, tính đạo hàm trên **toàn bộ tập dữ liệu** để cập nhật trọng số, tối thiểu hóa hàm mất mát Binary Cross-Entropy (Log Loss).
 
-cotsong: https://www.kaggle.com/datasets/uciml/biomechanical-features-of-orthopedic-patients/data
+**Phù hợp khi:**
+- Tập dữ liệu nhỏ đến trung bình
+- Ưu tiên hội tụ ổn định, mượt mà
+- Tài nguyên tính toán đủ để xử lý toàn bộ dữ liệu mỗi bước
 
-## Create virtual environment (recommended)
+### Stochastic Gradient Descent (SGD)
+Cập nhật trọng số dựa trên **một mẫu duy nhất** (hoặc mini-batch) tại mỗi lần lặp — tần suất cập nhật cao hơn, tốc độ học nhanh hơn đáng kể.
+
+**Phù hợp khi:**
+- Tập dữ liệu cực lớn
+- Cần tốc độ cập nhật nhanh, tiết kiệm RAM
+- Áp dụng cho **online learning**
+- Cần khả năng thoát khỏi local minima
+
+> SGD tạo nhiều "nhiễu" hơn trong quá trình tối ưu, nhưng thường hội tụ nhanh hơn và tổng quát hóa tốt hơn trong nhiều trường hợp.
+
+---
+
+## Cài đặt
+
+```bash
+# Tạo môi trường ảo (khuyến nghị)
 python -m venv venv
 
+# Kích hoạt môi trường
+source venv/bin/activate      # Linux / macOS
+venv\Scripts\activate         # Windows
 
-Linux / macOS: source venv/bin/activate
-
-Windows: venv\Scripts\activate
-
-
+# Cài thư viện
 pip install numpy pandas
-
-Run the program
-Use this when you want to train the model and compute the weights: python train.py
-
-Use this when you want to make predictions using the trained weights: python predict.py
-If the learned weights are not satisfactory, you can modify the training hyperparameters in the fit function inside the modelpre directory. Specifically, you may tune the learning rate, number of epochs, and patience to improve the resulting weights.
-(This applies only to the Gradient Descent optimization method.)
+```
 
 ---
-### Conclusion
 
-This project is a simple implementation of Logistic Regression aimed at understanding the core concepts behind classification models.
+## Sử dụng
 
-Users can:
+| Lệnh | Mô tả |
+|------|-------|
+| `python train.py` | Huấn luyện mô hình, lưu trọng số vào `meta/` |
+| `python predict.py` | Dự đoán trên dữ liệu mới từ `predict/dudoan.csv` |
+| `python evaluate.py` | Đánh giá mô hình với K-Fold Cross Validation |
 
-- Modify the dataset
+---
 
-- Retrain the model
+## Dataset
 
-- Tune hyperparameters
+Đặt dữ liệu vào thư mục `data/` theo cấu trúc sau:
 
-- Perform binary classification on their own data
+1. Đổi tên file thành `data.csv` và đặt vào `data/`
+2. Cập nhật `data/feature_names.txt` với tên các cột tương ứng
 
-Thank you for checking out this project.
-Have a great day! ☀️
+> **Lưu ý:** Dòng **cuối cùng** trong `feature_names.txt` phải là tên cột **biến mục tiêu** (nhãn 0 hoặc 1).
 
-Author: Nguyen Le Anh Tuan
+Nếu dữ liệu có cột dạng chuỗi (String), dùng `encoding/encoding.py` để chuyển thành giá trị số trước khi huấn luyện.
+
+**Dataset mẫu:**
+- 🦴 Cột sống (Orthopedic): [Kaggle – Biomechanical Features](https://www.kaggle.com/datasets/uciml/biomechanical-features-of-orthopedic-patients/data)
+- 🩺 Tiểu đường: *(dữ liệu tự cung cấp)*
+
+---
+
+## Đánh giá mô hình (`evaluate.py`)
+
+Sử dụng **K-Fold Cross Validation (k=5)** để đảm bảo tính khách quan.
+
+**Chỉ số phân loại:**
+
+| Chỉ số | Ý nghĩa |
+|--------|---------|
+| Accuracy | Độ chính xác tổng thể |
+| Precision | Tỷ lệ dự đoán dương tính đúng |
+| Recall | Khả năng phát hiện đúng các mẫu dương tính |
+| F1-Score | Trung bình điều hòa giữa Precision và Recall |
+| AUC | Khả năng phân biệt giữa hai lớp |
+
+**CV Score:** Báo cáo **mean** và **std** qua 5 folds để đánh giá độ ổn định mô hình.
+
+---
+
+## Dự đoán (`predict.py`)
+
+1. Đặt dữ liệu cần dự đoán vào `predict/dudoan.csv`
+2. Chạy `python predict.py`
+
+Chương trình sẽ tự động:
+- Encode và chuẩn hóa (scale) dựa trên tham số đã lưu từ lúc huấn luyện
+- Tính xác suất qua hàm **Sigmoid** và xuất kết quả phân loại (0 hoặc 1)
+
+---
+
+## Cấu trúc dự án
+
+```
+├── data/
+│   ├── data.csv               # Dữ liệu thô
+│   ├── data_scaled.csv        # Dữ liệu sau khi scale (tự sinh khi train)
+│   └── feature_names.txt      # Tên các cột (dòng cuối là biến mục tiêu)
+├── encoding/
+│   └── encoding.py            # Label Encoding cho cột dạng chuỗi
+├── meta/
+│   ├── scale_params.csv       # Mean/Std để tái sử dụng khi predict
+│   └── weights.csv            # Trọng số mô hình đã huấn luyện
+├── modelpre/
+│   ├── model.py               # Triển khai fit() và predict()
+│   ├── preprocessing.py       # Pipeline xử lý dữ liệu
+│   └── scalestd.py            # Tiện ích chuẩn hóa
+├── predict/
+│   ├── dudoan.csv             # Dữ liệu đầu vào để dự đoán
+│   └── dudoan_scaled.csv      # Dữ liệu đã scale
+├── evaluate.py
+├── predict.py
+└── train.py
+```
+
+---
+
+## Hyperparameters
+
+Có thể tinh chỉnh trực tiếp trong `train.py`:
+
+- **Learning Rate** — tốc độ học của mô hình
+- **Epochs** — số vòng lặp huấn luyện
+- **Optimizer** — chọn `GD` hoặc `SGD`
+
+---
+
+## Tác giả
+
+**Nguyễn Lê Anh Tuấn**
+
+Cảm ơn bạn đã quan tâm đến dự án! ☀️
