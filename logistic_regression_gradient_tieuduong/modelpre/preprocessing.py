@@ -1,60 +1,45 @@
 import pandas as pd
-import numpy as np
+import os
 from encoding.encoding import encode_categorical
+from modelpre.scalestd import calculate_and_save_params, apply_standard_scale
 
 def load_feature_names(path="data/feature_names.txt"):
-    with open(path, "r") as f:
-        features = [line.strip() for line in f if line.strip()]
-    return features
+    if not os.path.exists(path): return []
+    with open(path, "r", encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip()]
 
+def get_processed_data(input_csv, mode="train"):
+    all_cols = load_feature_names()
+    df = pd.read_csv(input_csv)
 
-def preprocess(
-    csv_path,
-    feature_path="data/feature_names.txt",
-    mean=None,
-    std=None,
-    training=True
-):
-    df = pd.read_csv(csv_path)
+    if mode == "train":
+        df = df[all_cols].dropna()
+        df = encode_categorical(df)
+        
+        features_only = all_cols[:-1]
+        target_col = all_cols[-1]
 
-    # 1. Đọc feature names
-    feature_names = load_feature_names(feature_path)
+        # CHỈ scale X, KHÔNG scale y
+        calculate_and_save_params(df, features_only)
+        X_scaled_df = apply_standard_scale(df, features_only)
+        
+        # Kết hợp lại với y nguyên bản
+        df_final = X_scaled_df.copy()
+        df_final[target_col] = df[target_col].values
 
-    # 2. Label là cột cuối
-    label_col = feature_names[-1]
-    feature_cols = feature_names[:-1]
+        if not os.path.exists("data"): os.makedirs("data")
+        df_final.to_csv("data/data_scaled.csv", index=False)
 
-    # 3. TRAIN vs PREDICT
-    if training:
-        # train: cần cả feature + label
-        df = df[feature_names]
-    else:
-        # predict: chỉ cần feature
-        df = df[feature_cols]
+        X = X_scaled_df.values
+        y = df[target_col].values.reshape(-1, 1)
+        return X, y
 
-    # 4. Drop missing
-    df = df.dropna()
+    elif mode == "predict":
+        features_only = all_cols[:-1]
+        missing = [col for col in features_only if col not in df.columns]
+        if missing: raise ValueError(f"Thiếu cột: {missing}")
 
-    # 5. Encode categorical
-    df = encode_categorical(df)
-
-    # 6. Lấy X
-    X = df[feature_cols].values.astype(float)
-
-    # 7. Scale
-    if training:
-        mean = X.mean(axis=0)
-        std = X.std(axis=0)
-        std[std == 0] = 1
-    else:
-        if mean is None or std is None:
-            raise ValueError("Predict cần mean & std từ train")
-
-    X = (X - mean) / std
-
-    # 8. Lấy y nếu là training
-    if training:
-        y = df[label_col].values.reshape(-1, 1).astype(float)
-        return X, y, feature_cols, mean, std
-    else:
-        return X, feature_cols
+        df = df[features_only]
+        df = encode_categorical(df)
+        df_scaled = apply_standard_scale(df, features_only)
+        return df_scaled.values, df_scaled
